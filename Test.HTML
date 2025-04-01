@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Diamond Wire Saw Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .wire-checkbox { margin-right: 10px; }
+    label { margin-right: 5px; }
+    #cumulativeData table { border-collapse: collapse; margin-top: 10px; }
+    #cumulativeData th, #cumulativeData td { border: 1px solid #ccc; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h2>Diamond Wire Saw Square Footage Tracker</h2>
+  
+  <!-- Input for initial wire cost -->
+  <div>
+    <label for="cost">Wire Cost ($):</label>
+    <input type="number" id="cost" value="1000" step="any">
+  </div>
+  <br>
+  
+  <!-- Form for entering a new cut -->
+  <form id="cutForm">
+    <div>
+      <label for="height">Block Height (inches):</label>
+      <input type="number" id="height" required>
+    </div>
+    <br>
+    <div>
+      <label for="width">Block Width (inches):</label>
+      <input type="number" id="width" required>
+    </div>
+    <br>
+    <div>
+      <span>Select wires used:</span>
+      <div id="wireCheckboxes"></div>
+    </div>
+    <br>
+    <button type="submit">Record Cut</button>
+  </form>
+  
+  <!-- Display cumulative data -->
+  <h3>Cumulative Data Per Wire</h3>
+  <div id="cumulativeData"></div>
+  
+  <script>
+    // Create an array for 15 wires with cumulative footage = 0
+    let wires = [];
+    for (let i = 0; i < 15; i++) {
+      wires.push({ id: i + 1, footage: 0 });
+    }
+    
+    // Dynamically populate the checkboxes for wires
+    const wireCheckboxesDiv = document.getElementById('wireCheckboxes');
+    for (let i = 0; i < 15; i++) {
+      let checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'wire' + (i + 1);
+      checkbox.value = i + 1;
+      checkbox.className = 'wire-checkbox';
+      checkbox.checked = true; // default all wires selected
+      
+      let label = document.createElement('label');
+      label.htmlFor = 'wire' + (i + 1);
+      label.innerText = 'Wire ' + (i + 1);
+      
+      wireCheckboxesDiv.appendChild(checkbox);
+      wireCheckboxesDiv.appendChild(label);
+      wireCheckboxesDiv.appendChild(document.createElement('br'));
+    }
+    
+    // Function to update the cumulative data display
+    function updateCumulativeDisplay() {
+      const cumulativeDiv = document.getElementById('cumulativeData');
+      let html = '<table><tr><th>Wire #</th><th>Cumulative Sq Ft</th><th>Cost per Sq Ft</th></tr>';
+      let totalCost = parseFloat(document.getElementById('cost').value);
+      
+      wires.forEach(wire => {
+        let costPerSqFt = wire.footage > 0 ? (totalCost / wire.footage).toFixed(2) : 'N/A';
+        html += '<tr><td>' + wire.id + '</td><td>' + wire.footage.toFixed(2) + '</td><td>' + costPerSqFt + '</td></tr>';
+      });
+      html += '</table>';
+      cumulativeDiv.innerHTML = html;
+    }
+    
+    // Initial display update
+    updateCumulativeDisplay();
+    
+    // Handle form submission to record a cut
+    document.getElementById('cutForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      // Get block dimensions
+      let height = parseFloat(document.getElementById('height').value);
+      let width = parseFloat(document.getElementById('width').value);
+      
+      if (isNaN(height) || isNaN(width) || height <= 0 || width <= 0) {
+        alert('Please enter valid dimensions.');
+        return;
+      }
+      
+      // Calculate square footage (convert square inches to square feet by dividing by 144)
+      let squareFeet = (height * width) / 144;
+      
+      // For each wire, add squareFeet if its checkbox is checked
+      for (let i = 0; i < 15; i++) {
+        let checkbox = document.getElementById('wire' + (i + 1));
+        if (checkbox.checked) {
+          wires[i].footage += squareFeet;
+        }
+      }
+      
+      // Optionally reset the form inputs (keeping the cost input intact)
+      document.getElementById('cutForm').reset();
+      // Re-check all wires after reset (if desired)
+      for (let i = 0; i < 15; i++) {
+        document.getElementById('wire' + (i + 1)).checked = true;
+      }
+      
+      updateCumulativeDisplay();
+    });
+  </script>
+</body>
+</html>
